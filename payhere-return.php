@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/payment-page.php';
 
-$orderNo = trim((string)($_GET['order'] ?? ''));
+$orderNo = trim((string)($_GET['order'] ?? $_GET['order_id'] ?? ''));
 $payload = $_SERVER['REQUEST_METHOD'] === 'POST' ? $_POST : $_GET;
 
 if (!empty($payload['merchant_id']) && !empty($payload['order_id']) && !empty($payload['md5sig'])) {
@@ -57,7 +57,8 @@ renderGatewayPaymentPage([
     'primary_label' => 'Go Home',
     'secondary_href' => 'cart.php',
     'secondary_label' => 'View Cart',
+    'auto_refresh_seconds' => in_array($paymentStatus, ['awaiting_payment', 'pending'], true) ? 45 : 0,
     'extra_note' => $paymentStatus === 'paid'
         ? 'Your payment is already marked as paid in the system.'
-        : 'If the payment did not complete successfully, you can return to checkout and try again.',
+        : "PayHere does not send the final payment result to this return page.\nWe can mark the order as paid only after the server-to-server notification reaches our notify URL.\nThis page will refresh automatically for a short time while we wait for that confirmation.",
 ]);

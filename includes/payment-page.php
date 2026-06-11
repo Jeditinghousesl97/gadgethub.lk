@@ -93,6 +93,7 @@ function renderGatewayPaymentPage(array $options): void {
     $secondaryHref = $options['secondary_href'] ?? 'cart.php';
     $secondaryLabel = $options['secondary_label'] ?? 'View Cart';
     $extraNote = $options['extra_note'] ?? '';
+    $autoRefreshSeconds = max(0, (int)($options['auto_refresh_seconds'] ?? 0));
 
     $paymentPresentation = getPaymentMethodPresentation($gatewayKey === 'koko' ? 'koko' : 'payhere');
     $paymentLogo = $paymentPresentation['image'] ?? '';
@@ -195,6 +196,13 @@ function renderGatewayPaymentPage(array $options): void {
 
 <div id="footer-slot"></div>
 <script src="components/footer.js"></script>
+<?php if ($autoRefreshSeconds > 0): ?>
+<script>
+  window.setTimeout(function () {
+    window.location.reload();
+  }, <?= $autoRefreshSeconds * 1000 ?>);
+</script>
+<?php endif; ?>
 
 </body>
 </html>

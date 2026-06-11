@@ -2,11 +2,11 @@
 header('Content-Type: text/plain; charset=UTF-8');
 
 require_once dirname(__DIR__) . '/includes/functions.php';
-ensureOrderPaymentColumns();
 
 $rawBody = file_get_contents('php://input');
 $contentType = (string)($_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '');
 $method = (string)($_SERVER['REQUEST_METHOD'] ?? '');
+$userAgent = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
 
 $payload = $_POST;
 if (empty($payload) && is_string($rawBody) && trim($rawBody) !== '') {
@@ -23,6 +23,7 @@ if (empty($payload) && !empty($_GET)) {
 writeGatewayDebugLog('payhere', 'notify_received', [
     'method' => $method,
     'content_type' => $contentType,
+    'user_agent' => $userAgent,
     'post' => $_POST,
     'get' => $_GET,
     'raw_body' => $rawBody,
@@ -30,6 +31,7 @@ writeGatewayDebugLog('payhere', 'notify_received', [
 ]);
 
 try {
+    ensureOrderPaymentColumns();
     $result = processPayherePaymentPayload($payload);
     writeGatewayDebugLog('payhere', 'notify_processed', [
         'order_id' => $result['order_id'] ?? '',
@@ -38,6 +40,14 @@ try {
         'payment_id' => $result['payment_id'] ?? '',
     ]);
     echo 'OK';
+} catch (PDOException $e) {
+    writeGatewayDebugLog('payhere', 'notify_db_error', [
+        'message' => $e->getMessage(),
+        'payload' => $payload,
+        'raw_body' => $rawBody,
+    ]);
+    http_response_code(500);
+    echo 'Database error';
 } catch (InvalidArgumentException $e) {
     writeGatewayDebugLog('payhere', 'notify_invalid', [
         'message' => $e->getMessage(),
@@ -64,4 +74,3 @@ try {
     }
     echo $message;
 }
-
