@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gadget Hub - Coming Soon</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(255, 30, 30, 0.22), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(255, 214, 48, 0.18), transparent 35%),
+        linear-gradient(135deg, #060606, #111111 45%, #050505);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1150px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .left {
+      animation: fadeUp 0.8s ease forwards;
+    }
+
+    .logo-card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 28px;
+      padding: 18px;
+      backdrop-filter: blur(10px);
+    }
+
+    .logo-card img {
+      width: 100%;
+      display: block;
+      border-radius: 20px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 204, 0, 0.12);
+      color: #ffd230;
+      border: 1px solid rgba(255, 204, 0, 0.28);
+      padding: 9px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 22px;
+    }
+
+    .badge span {
+      width: 8px;
+      height: 8px;
+      background: #ff2a2a;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 14px rgba(255, 42, 42, 0.9);
+    }
+
+    h1 {
+      font-size: clamp(42px, 6vw, 76px);
+      line-height: 0.95;
+      font-weight: 800;
+      letter-spacing: -2px;
+      margin-bottom: 20px;
+    }
+
+    h1 .yellow {
+      color: #ffd230;
+    }
+
+    h1 .red {
+      color: #ff2424;
+    }
+
+    .description {
+      max-width: 560px;
+      color: #d5d5d5;
+      font-size: 17px;
+      line-height: 1.75;
+      margin-bottom: 30px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .btn {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 52px;
+      padding: 0 22px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 15px;
+      transition: 0.25s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ff2424, #d90000);
+      color: #ffffff;
+      box-shadow: 0 14px 35px rgba(255, 36, 36, 0.26);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 18px 40px rgba(255, 36, 36, 0.35);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.13);
+      transform: translateY(-3px);
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      max-width: 620px;
+    }
+
+    .info-box {
+      background: rgba(255, 255, 255, 0.065);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .info-box small {
+      color: #ffd230;
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+
+    .info-box a,
+    .info-box p {
+      color: #f2f2f2;
+      text-decoration: none;
+      font-size: 15px;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+
+    .right {
+      display: flex;
+      justify-content: center;
+      animation: fadeUp 1s ease forwards;
+    }
+
+    .launch-card {
+      width: 100%;
+      max-width: 430px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.035));
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 32px;
+      padding: 34px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .launch-card::before {
+      content: "";
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      background: rgba(255, 36, 36, 0.20);
+      border-radius: 50%;
+      top: -70px;
+      right: -70px;
+      filter: blur(4px);
+    }
+
+    .launch-card h2 {
+      font-size: 30px;
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .launch-card p {
+      color: #d8d8d8;
+      line-height: 1.7;
+      margin-bottom: 26px;
+      position: relative;
+    }
+
+    .features {
+      list-style: none;
+      display: grid;
+      gap: 14px;
+      position: relative;
+    }
+
+    .features li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      color: #f4f4f4;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .check {
+      min-width: 24px;
+      height: 24px;
+      background: rgba(255, 210, 48, 0.15);
+      color: #ffd230;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .footer-note {
+      margin-top: 28px;
+      color: #aaaaaa;
+      font-size: 13px;
+      position: relative;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 20px;
+        align-items: flex-start;
+      }
+
+      .page {
+        grid-template-columns: 1fr;
+        gap: 34px;
+        padding: 20px 0;
+      }
+
+      .left {
+        text-align: center;
+      }
+
+      .description {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .actions {
+        justify-content: center;
+      }
+
+      .logo-card {
+        margin: 0 auto;
+      }
+
+      .right {
+        order: -1;
+      }
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 16px;
+      }
+
+      .page {
+        gap: 26px;
+      }
+
+      .logo-card {
+        max-width: 310px;
+        border-radius: 22px;
+        padding: 12px;
+      }
+
+      .logo-card img {
+        border-radius: 16px;
+      }
+
+      .badge {
+        font-size: 13px;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        font-size: 44px;
+        letter-spacing: -1.2px;
+      }
+
+      .description {
+        font-size: 15.5px;
+        line-height: 1.65;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .launch-card {
+        padding: 26px 22px;
+        border-radius: 24px;
+      }
+
+      .launch-card h2 {
+        font-size: 25px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+
+    <section class="left">
+      <div class="badge">
+        <span></span>
+        Official Website Launching Soon
+      </div>
+
+      <h1>
+        Gadget <span class="yellow">Hub</span><br>
+        <span class="red">Coming Soon</span>
+      </h1>
+
+      <p class="description">
+        We are getting ready to launch our official website. Gadget Hub is your trusted wholesale and retail dealer for used and brand-new mobile accessories and home appliances in Sri Lanka.
+      </p>
+
+      <div class="actions">
+        <a class="btn btn-primary" href="https://wa.me/94763896551" target="_blank">
+          Chat on WhatsApp
+        </a>
+
+        <a class="btn btn-secondary" href="mailto:info@gadgethub.lk">
+          Send Email
+        </a>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-box">
+          <small>WhatsApp</small>
+          <a href="https://wa.me/94763896551" target="_blank">+94 76 389 6551</a>
+        </div>
+
+        <div class="info-box">
+          <small>Email</small>
+          <a href="mailto:info@gadgethub.lk">info@gadgethub.lk</a>
+        </div>
+
+        <div class="info-box">
+          <small>Website</small>
+          <a href="https://gadgethub.lk" target="_blank">gadgethub.lk</a>
+        </div>
+
+        <div class="info-box">
+          <small>Location</small>
+          <p>No 109, Wariyagoda, Alawwa, Sri Lanka</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="right">
+      <div class="launch-card">
+        <div class="logo-card">
+          <img src="logo.jpg" alt="Gadget Hub Logo">
+        </div>
+
+        <br>
+
+        <h2>Something Better is Coming</h2>
+
+        <p>
+          Our online platform is currently under development. Soon you will be able to explore our latest gadgets, accessories, appliances, offers, and services online.
+        </p>
+
+        <ul class="features">
+          <li>
+            <span class="check">✓</span>
+            Wholesale and retail mobile accessories
+          </li>
+          <li>
+            <span class="check">✓</span>
+            Used and brand-new products
+          </li>
+          <li>
+            <span class="check">✓</span>
+            Home appliances and gadget solutions
+          </li>
+          <li>
+            <span class="check">✓</span>
+            Accessories, repairing, and customer support
+          </li>
+        </ul>
+
+        <div class="footer-note">
+          © 2026 Gadget Hub. All Rights Reserved.
+        </div>
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>
