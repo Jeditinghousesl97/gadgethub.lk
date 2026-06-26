@@ -167,9 +167,9 @@ foreach ($paymentMethods as $paymentMethod) {
 
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px">
-                Email Address <span style="font-weight:400;text-transform:none;font-size:11px">(optional - for confirmation email)</span>
+                Email Address <span style="color:var(--red)">*</span>
               </label>
-              <input type="email" id="ckEmail" class="form-input" placeholder="your@email.com">
+              <input type="email" id="ckEmail" class="form-input" placeholder="your@email.com" required>
             </div>
 
             <div style="margin-bottom:16px">
@@ -628,7 +628,7 @@ select.form-input{
     const paymentMethodEl = document.querySelector('input[name="payment_method"]:checked');
     const paymentMethod = paymentMethodEl ? paymentMethodEl.value : '';
 
-    if (!name || !phone || !city || !district || !address || !paymentMethod) {
+    if (!name || !phone || !city || !district || !email || !address || !paymentMethod) {
       showError('Please fill in all required fields.');
       return;
     }

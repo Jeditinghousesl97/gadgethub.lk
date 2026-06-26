@@ -284,3 +284,122 @@ HTML;
 
     return emailWrap($body);
 }
+
+function emailOrderStatusUpdate(array $order, array $items, string $oldStatus, string $newStatus): string
+{
+    $order = normalizeOrderDisplayData($order);
+    $rows = emailItemRows($items);
+    $sub = number_format((float)($order['subtotal'] ?? 0), 2);
+    $del = (float)($order['delivery_charge'] ?? 0);
+    $handling = (float)($order['handling_fee'] ?? 0);
+    $total = number_format((float)($order['total'] ?? 0), 2);
+    $delLine = $del > 0
+        ? "<div class='totals-row'><span>Delivery</span><span>Rs. " . number_format($del, 2) . "</span></div>"
+        : "<div class='totals-row'><span>Delivery</span><span style='color:#10b981'>Free</span></div>";
+    $handlingLine = $handling > 0
+        ? "<div class='totals-row'><span>Handling Fee</span><span>Rs. " . number_format($handling, 2) . "</span></div>"
+        : '';
+
+    $statusMap = [
+        'pending' => 'Pending',
+        'confirmed' => 'Confirmed',
+        'processing' => 'Processing',
+        'dispatched' => 'Dispatched',
+        'delivered' => 'Delivered',
+        'cancelled' => 'Cancelled',
+    ];
+    $oldLabel = $statusMap[$oldStatus] ?? ucfirst(str_replace('_', ' ', $oldStatus));
+    $newLabel = $statusMap[$newStatus] ?? ucfirst(str_replace('_', ' ', $newStatus));
+    $customerName = htmlspecialchars((string)($order['customer_name'] ?? 'Customer'));
+    $orderNumber = htmlspecialchars((string)($order['order_number'] ?? ''));
+    $wa = 'https://wa.me/' . getSetting('store_whatsapp', '94777237962');
+
+    $body = <<<HTML
+<div class="hero">
+  <h1>Order Status Updated</h1>
+  <p>Your Gadget Hub order is now marked as <strong>{$newLabel}</strong>.</p>
+</div>
+<div class="body">
+  <div class="order-num">
+    <div class="label">Order Number</div>
+    <div class="num">{$orderNumber}</div>
+  </div>
+
+  <div class="info-box">
+    <div class="info-row"><span class="info-label">Customer</span><span class="info-val">{$customerName}</span></div>
+    <div class="info-row"><span class="info-label">Previous</span><span class="info-val">{$oldLabel}</span></div>
+    <div class="info-row"><span class="info-label">Current</span><span class="info-val">{$newLabel}</span></div>
+  </div>
+
+  <div class="totals">
+    <div class="totals-row"><span>Subtotal</span><span>Rs. {$sub}</span></div>
+    {$delLine}
+    {$handlingLine}
+    <div class="totals-row total"><span>Total</span><span>Rs. {$total}</span></div>
+  </div>
+
+  <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;color:#111">Order Items</h3>
+  <table class="items">
+    <thead>
+      <tr><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Subtotal</th></tr>
+    </thead>
+    <tbody>{$rows}</tbody>
+  </table>
+
+  <div class="cta-box">
+    <p>If you have any questions about this update, our team is happy to help.</p>
+    <a href="{$wa}" class="btn-wa">Chat with us on WhatsApp</a>
+  </div>
+</div>
+HTML;
+
+    return emailWrap($body);
+}
+
+function emailPaymentStatusUpdate(array $order, array $items, string $oldStatus, string $newStatus): string
+{
+    $order = normalizeOrderDisplayData($order);
+    $rows = emailItemRows($items);
+    $paymentStatusMap = [
+        'pending' => 'Pending',
+        'awaiting_payment' => 'Awaiting Payment',
+        'paid' => 'Paid',
+        'failed' => 'Failed',
+        'cancelled' => 'Cancelled',
+        'refunded' => 'Refunded',
+    ];
+    $oldLabel = $paymentStatusMap[$oldStatus] ?? ucfirst(str_replace('_', ' ', $oldStatus));
+    $newLabel = $paymentStatusMap[$newStatus] ?? ucfirst(str_replace('_', ' ', $newStatus));
+    $customerName = htmlspecialchars((string)($order['customer_name'] ?? 'Customer'));
+    $orderNumber = htmlspecialchars((string)($order['order_number'] ?? ''));
+    $wa = 'https://wa.me/' . getSetting('store_whatsapp', '94777237962');
+
+    $body = <<<HTML
+<div class="hero">
+  <h1>Payment Status Updated</h1>
+  <p>Your payment status for order <strong>{$orderNumber}</strong> is now <strong>{$newLabel}</strong>.</p>
+</div>
+<div class="body">
+  <div class="info-box" style="margin-bottom:20px">
+    <div class="info-row"><span class="info-label">Customer</span><span class="info-val">{$customerName}</span></div>
+    <div class="info-row"><span class="info-label">Previous</span><span class="info-val">{$oldLabel}</span></div>
+    <div class="info-row"><span class="info-label">Current</span><span class="info-val">{$newLabel}</span></div>
+  </div>
+
+  <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;color:#111">Order Items</h3>
+  <table class="items">
+    <thead>
+      <tr><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Subtotal</th></tr>
+    </thead>
+    <tbody>{$rows}</tbody>
+  </table>
+
+  <div class="cta-box">
+    <p>If you need help with this payment update or want to confirm anything with our team, contact us anytime.</p>
+    <a href="{$wa}" class="btn-wa">Chat with us on WhatsApp</a>
+  </div>
+</div>
+HTML;
+
+    return emailWrap($body);
+}

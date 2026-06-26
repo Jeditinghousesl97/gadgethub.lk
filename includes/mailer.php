@@ -4,6 +4,12 @@ require_once __DIR__ . '/functions.php';
 class SmtpMailer
 {
     private $sock = null;
+    private $lastError = '';
+
+    public function getLastError(): string
+    {
+        return $this->lastError;
+    }
 
     public function deliver(array $cfg, string $to, string $toName, string $subject, string $html): bool
     {
@@ -18,24 +24,62 @@ class SmtpMailer
     {
         $addr = ($enc === 'ssl' ? 'ssl://' : '') . $host;
         $this->sock = @fsockopen($addr, $port, $errno, $errstr, 15);
-        if (!$this->sock) return false;
+        if (!$this->sock) {
+            $this->lastError = trim("Connection failed: {$errno} {$errstr}");
+            return false;
+        }
 
-        $this->read();
-        $this->cmd('EHLO ' . (gethostname() ?: 'localhost'));
+        $greeting = $this->read();
+        if (!str_starts_with($greeting, '220')) {
+            $this->lastError = 'SMTP greeting failed: ' . trim($greeting);
+            return false;
+        }
+
+        $ehlo = $this->cmd('EHLO ' . (gethostname() ?: 'localhost'));
+        if (!str_starts_with($ehlo, '250')) {
+            $this->lastError = 'EHLO failed: ' . trim($ehlo);
+            return false;
+        }
 
         if ($enc === 'tls') {
-            $this->cmd('STARTTLS');
-            stream_socket_enable_crypto($this->sock, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
-            $this->cmd('EHLO ' . (gethostname() ?: 'localhost'));
+            $tls = $this->cmd('STARTTLS');
+            if (!str_starts_with($tls, '220')) {
+                $this->lastError = 'STARTTLS failed: ' . trim($tls);
+                return false;
+            }
+
+            if (!stream_socket_enable_crypto($this->sock, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                $this->lastError = 'Unable to enable TLS encryption.';
+                return false;
+            }
+
+            $ehloTls = $this->cmd('EHLO ' . (gethostname() ?: 'localhost'));
+            if (!str_starts_with($ehloTls, '250')) {
+                $this->lastError = 'EHLO after STARTTLS failed: ' . trim($ehloTls);
+                return false;
+            }
         }
         return true;
     }
 
     private function auth(string $u, string $p): bool
     {
-        $this->cmd('AUTH LOGIN');
-        $this->cmd(base64_encode($u));
+        $auth = $this->cmd('AUTH LOGIN');
+        if (!str_starts_with($auth, '334')) {
+            $this->lastError = 'AUTH LOGIN failed: ' . trim($auth);
+            return false;
+        }
+
+        $userResp = $this->cmd(base64_encode($u));
+        if (!str_starts_with($userResp, '334')) {
+            $this->lastError = 'SMTP username rejected: ' . trim($userResp);
+            return false;
+        }
+
         $r = $this->cmd(base64_encode($p));
+        if (!str_starts_with($r, '235')) {
+            $this->lastError = 'SMTP password rejected: ' . trim($r);
+        }
         return str_starts_with($r, '235');
     }
 
@@ -44,9 +88,23 @@ class SmtpMailer
         string $to,   string $toName,
         string $subject, string $html
     ): bool {
-        $this->cmd("MAIL FROM:<$from>");
-        $this->cmd("RCPT TO:<$to>");
-        $this->cmd('DATA');
+        $mailFrom = $this->cmd("MAIL FROM:<$from>");
+        if (!str_starts_with($mailFrom, '250')) {
+            $this->lastError = 'MAIL FROM failed: ' . trim($mailFrom);
+            return false;
+        }
+
+        $rcptTo = $this->cmd("RCPT TO:<$to>");
+        if (!str_starts_with($rcptTo, '250') && !str_starts_with($rcptTo, '251')) {
+            $this->lastError = 'RCPT TO failed: ' . trim($rcptTo);
+            return false;
+        }
+
+        $data = $this->cmd('DATA');
+        if (!str_starts_with($data, '354')) {
+            $this->lastError = 'DATA command failed: ' . trim($data);
+            return false;
+        }
 
         $boundary = uniqid('gnx_', true);
         $plain    = wordwrap(strip_tags(preg_replace('/<br\s*\/?>/i', "\n", $html)), 76, "\n", true);
@@ -72,6 +130,9 @@ class SmtpMailer
         $msg .= "--$boundary--\r\n.";
 
         $r = $this->cmd($msg);
+        if (!str_starts_with($r, '250')) {
+            $this->lastError = 'SMTP message rejected: ' . trim($r);
+        }
         return str_starts_with($r, '250');
     }
 
@@ -114,11 +175,25 @@ function sendMail(string $to, string $toName, string $subject, string $html): bo
         'from_name'  => getSetting('smtp_from_name', getSetting('store_name', 'GADGET HUB Store')),
     ];
 
-    if (!$cfg['host'] || !$cfg['username'] || !$cfg['from_email']) return false;
+    if (!$cfg['host'] || !$cfg['username'] || !$cfg['from_email']) {
+        error_log('sendMail skipped: SMTP settings are incomplete.');
+        return false;
+    }
+
+    if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+        error_log('sendMail skipped: invalid recipient email "' . $to . '".');
+        return false;
+    }
 
     try {
-        return (new SmtpMailer())->deliver($cfg, $to, $toName, $subject, $html);
-    } catch (Throwable) {
+        $mailer = new SmtpMailer();
+        $ok = $mailer->deliver($cfg, $to, $toName, $subject, $html);
+        if (!$ok) {
+            error_log('sendMail failed for ' . $to . ': ' . $mailer->getLastError());
+        }
+        return $ok;
+    } catch (Throwable $e) {
+        error_log('sendMail exception for ' . $to . ': ' . $e->getMessage());
         return false;
     }
 }

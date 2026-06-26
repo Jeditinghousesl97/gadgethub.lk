@@ -56,6 +56,7 @@ if (!$phone)        $errors[] = 'Phone number is required.';
 if (!$city)         $errors[] = 'City is required.';
 if (!$district)     $errors[] = 'District is required.';
 if (empty($items))  $errors[] = 'Your cart is empty.';
+if (!$email)        $errors[] = 'Email address is required.';
 if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email address.';
 if (!$paymentMethod) $errors[] = 'Payment method is required.';
 if ($paymentMethod && !in_array($paymentMethod, $enabledMethodKeys, true)) $errors[] = 'Selected payment method is not available.';
@@ -255,7 +256,7 @@ if ($email) {
 }
 
 // Admin notification
-$adminEmail = getSetting('admin_notify_email');
+$adminEmail = getSetting('admin_notify_email') ?: getSetting('store_email');
 if ($adminEmail) {
     $html = emailAdminNewOrder($order, $cleanItems);
     sendMail($adminEmail, 'GADGET HUB Admin', 'New Order: ' . $orderNumber . ' from ' . $name, $html);
