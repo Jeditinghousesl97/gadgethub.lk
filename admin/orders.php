@@ -52,6 +52,14 @@ $statuses = [
 ];
 
 $sourceBadge = ['whatsapp'=>'badge-green','website'=>'badge-blue','instore'=>'badge-yellow'];
+$paymentStatusMap = [
+    'pending'          => ['Pending', 'badge-yellow'],
+    'awaiting_payment' => ['Awaiting Payment', 'badge-blue'],
+    'paid'             => ['Paid', 'badge-green'],
+    'failed'           => ['Failed', 'badge-red'],
+    'cancelled'        => ['Cancelled', 'badge-gray'],
+    'refunded'         => ['Refunded', 'badge-purple'],
+];
 ?>
 
 <div class="page-header">
@@ -123,6 +131,11 @@ $sourceBadge = ['whatsapp'=>'badge-green','website'=>'badge-blue','instore'=>'ba
         }
         $retryCount = (int)($paymentMeta['retry_count'] ?? 0);
         $isOnlineGatewayOrder = in_array(($o['payment_method'] ?? ''), ['payhere', 'koko'], true);
+        $paymentPresentation = getPaymentMethodPresentation((string)($o['payment_method'] ?? ''));
+        $paymentLabel = $paymentPresentation['label'];
+        $paymentStatus = strtolower(trim((string)($o['payment_status'] ?? 'pending')));
+        [$paymentStatusText, $paymentBadgeClass] = $paymentStatusMap[$paymentStatus]
+            ?? [ucfirst(str_replace('_', ' ', $paymentStatus ?: 'pending')), 'badge-gray'];
       ?>
         <tr>
           <td>
@@ -145,11 +158,12 @@ $sourceBadge = ['whatsapp'=>'badge-green','website'=>'badge-blue','instore'=>'ba
             <?php endif ?>
           </td>
           <td style="font-size:12px;color:var(--text-muted)">
-            <?php
-              $pm = $o['payment_method'] ?? '';
-              $pmMap = ['cod'=>'COD','bank_transfer'=>'Bank Transfer','whatsapp'=>'WhatsApp','payhere'=>'PayHere','koko'=>'KOKO'];
-              echo htmlspecialchars($pmMap[$pm] ?? ($pm ? ucfirst(str_replace('_',' ', $pm)) : '-'));
-            ?>
+            <div style="display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <span><?= htmlspecialchars($paymentLabel) ?></span>
+              <span class="badge <?= htmlspecialchars($paymentBadgeClass) ?>" style="font-size:10px;padding:2px 7px;line-height:1.2">
+                <?= htmlspecialchars($paymentStatusText) ?>
+              </span>
+            </div>
             <?php if ($isOnlineGatewayOrder && $retryCount > 0): ?>
               <div style="margin-top:4px">
                 <span class="badge badge-purple" style="font-size:10.5px;padding:3px 8px">
