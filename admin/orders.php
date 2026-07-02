@@ -187,6 +187,16 @@ $paymentStatusMap = [
             <a href="order-detail.php?id=<?= $o['id'] ?>" class="btn btn-ghost btn-icon btn-sm" title="View Details">
               <i class="fas fa-eye"></i>
             </a>
+            <button
+              type="button"
+              class="btn btn-ghost btn-icon btn-sm js-delete-order"
+              title="Delete Order"
+              data-id="<?= $o['id'] ?>"
+              data-num="<?= htmlspecialchars($o['order_number']) ?>"
+              style="color:#ef4444"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
           </td>
         </tr>
       <?php endforeach ?>
@@ -247,6 +257,54 @@ document.querySelectorAll('.js-status-select').forEach(function (sel) {
       }
     })
     .catch(function () { adminSnackbar('Network error. Try again.', 'error'); });
+  });
+});
+
+document.querySelectorAll('.js-delete-order').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var id = parseInt(btn.dataset.id, 10);
+    var num = btn.dataset.num || '';
+
+    if (!id) {
+      adminSnackbar('Invalid order.', 'error');
+      return;
+    }
+
+    if (!confirm('Delete order ' + num + '? This cannot be undone.')) {
+      return;
+    }
+
+    var originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    fetch('<?= BASE_URL ?>admin/api/delete-order.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: id })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      if (res.success) {
+        adminSnackbar('Order ' + (res.order_number || num) + ' deleted.', 'success');
+        var row = btn.closest('tr');
+        if (row) {
+          row.remove();
+        }
+        window.setTimeout(function () {
+          window.location.reload();
+        }, 300);
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        adminSnackbar(res.error || 'Delete failed.', 'error');
+      }
+    })
+    .catch(function () {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+      adminSnackbar('Network error. Try again.', 'error');
+    });
   });
 });
 </script>
